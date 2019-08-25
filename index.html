@@ -151,7 +151,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/24/我的第一篇博客/">我的第一篇博客</a>
+      <a class="article-title" href="/2019/08/24/我的第一篇博客/">(踩坑记录)博客搭建</a>
     </h1>
   
 
@@ -164,7 +164,14 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="第一章"><a href="#第一章" class="headerlink" title="第一章"></a>第一章</h2><p>内容</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本博客基于hexo框架搭建，以b站视频<a href="https://www.bilibili.com/video/av44544186?from=search&seid=11044546372699959844" target="_blank" rel="noopener">https://www.bilibili.com/video/av44544186?from=search&amp;seid=11044546372699959844</a>为教程搭建，记录了本人在搭建过程中出现的问题。</p>
+<h2 id="权限问题"><a href="#权限问题" class="headerlink" title="权限问题"></a>权限问题</h2><p>利用hexo框架搭建博客需要root用户权限，macos系统有两种方式切换到root用户</p>
+<p>1.sudo -i</p>
+<p>此命令执行后显示如图</p>
+<p><img src="/Users/mac/Desktop/Snip20190825_6.png" alt="sudo -i"></p>
+<p>2.sudo su</p>
+<p><img src="/Users/mac/Desktop/Snip20190825_5.png" alt="sudo su"></p>
+<p>可以看出两者执行后工作目录不同，由于本人刚开始接触macos系统，根据教学视频，选择了第二种，第一种方式下的目录我在访达中没有找到，所以放弃。如果没有在获得root权限下执行init博客会报错，且之后的操作都是在root权限和该目录下进行的，可以说是我搭建过程中遇到的问题的最根本原因。</p>
 
       
 
