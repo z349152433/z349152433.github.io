@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+  
+    
+    <entry>
+      <title>(1)Java并发编程实战笔记-线程安全性指的是什么</title>
+      <link href="/2022/08/28/1-Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98%E7%AC%94%E8%AE%B0-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7%E6%8C%87%E7%9A%84%E6%98%AF%E4%BB%80%E4%B9%88/"/>
+      <url>/2022/08/28/1-Java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%AE%9E%E6%88%98%E7%AC%94%E8%AE%B0-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7%E6%8C%87%E7%9A%84%E6%98%AF%E4%BB%80%E4%B9%88/</url>
+      
+        <content type="html"><![CDATA[<ul><li><p>讨论线程安全性核心的概念是正确性.</p><p>线程安全性指的是当多个线程访问某个类时,这个类始终能保持正确,那么这个类是安全的.   </p><a id="more"></a></li><li><p>什么是正确性?</p><p>正确性指的是某个类与我们预期的功能一致. </p></li><li><p>无状态的对象一定是线程安全的</p><p>当无状态的类被多个线程访问时,每个线程的状态仅存在于线程栈上的局部变量,且只能由正在执行的线程访问,多个线程不共享状态,因此线程之间不影响正确性,因此无状态对象是安全的.    </p></li><li><p>原子性</p><p>如果在一个类中加入一个变量Count来统计请求数量,每次请求+1,这个类就变成了不安全的.因为+1这个操作不是原子性的,实际上它包括“读取-修改-写入”三步.</p><ul><li><p>竟态条件</p><p>当正确性取决于多个线程的交替执行顺序时,就会发生竟态条件,即正确性取决于多个线程实际的执行顺序,有的顺序可以保证正确性,有的不能.</p><p>竟态条件中最常见的是“先检查后执行”,即首先观察某个条件为真,然后根据观察的结果采取相应的动作,但观察到的结果可能无效,从而导致产生问题.如:首先判断文件X不存在,然后创建文件X,但这一期间可能另一个线程创建了文件X,导致出现问题.   </p></li><li><p>示例:延迟初始化中的竟态条件</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LazyInitRace</span></span>&#123;</span><br><span class="line"><span class="keyword">private</span> ExpensiveObject instance=<span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> ExpensiveObject <span class="title">getInstance</span><span class="params">()</span></span>&#123;</span><br><span class="line"><span class="keyword">if</span> (instance == <span class="keyword">null</span>) </span><br><span class="line">instance = <span class="keyword">new</span> ExpensiveObject();</span><br><span class="line"><span class="keyword">return</span> instance;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>LazyInitRace 不是线程安全的,因为包含了一个竟态条件.   </p></li><li><p>复合操作</p><p>要避免竟态条件问题,必须在某个线程修改该变量时通过某种方式阻止其他线程使用这个变量,即“读取-修改-写入”三步是原子的.Java中常用加锁机制可以实现原子性.还可以使用现有的线程安全类来实现.</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CountingFactorizer</span> <span class="keyword">implements</span> <span class="title">Servlet</span></span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicLong count = <span class="keyword">new</span> AtomicLong(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">getCount</span><span class="params">()</span></span>&#123; <span class="keyword">return</span> count.get();&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">service</span><span class="params">(ServletRequest req,ServletResponse resp)</span></span>&#123;</span><br><span class="line">BigInteger i = extractFromRequest(req);</span><br><span class="line">BigInteger[] factors=factor(i);</span><br><span class="line">count.incrementAndGet();</span><br><span class="line">encodeIntoResponse(resp,factors);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>当在一个无状态的类中添加一个状态时,如果该状态完全由线程安全的对象来管理,那么这个类依然是线程安全的.</p></li></ul></li><li><p>多个状态</p><p>如果在一个类中添加多个状态,全部使用安全的状态变量是否能保证线程安全呢?答案是不行.</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UnsafeCachingFactorizer</span> <span class="keyword">implements</span> <span class="title">Servlet</span></span>&#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicReference&lt;BigInteger&gt; lastNumber=<span class="keyword">new</span> AtomicReference&lt;BigInteger&gt;();</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> AtomicReference&lt;BigInteger[]&gt; lastFactors=<span class="keyword">new</span> AtomicReference&lt;BigInteger[]&gt;();</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">service</span><span class="params">(ServletRequest req,ServletResponse resp)</span></span>&#123;</span><br><span class="line">BigInteger i=extractFromRequest(req);</span><br><span class="line"><span class="keyword">if</span> (i.equals(lastNumber.get()))</span><br><span class="line">encodeIntoResponse(resp,lastFactors.get());</span><br><span class="line"><span class="keyword">else</span>&#123;</span><br><span class="line">BigInteger[] factors=factor(i);</span><br><span class="line">lastNumber.set(i);</span><br><span class="line">lastFactors.set(factors);</span><br><span class="line">encodeIntoResponse(resp,factors);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由于两个变量操作不是原子的,只是在某个变量内部保证原子,所以整个类不能保证线程安全.</p></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java并发编程实战笔记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> :Java </tag>
+            
+            <tag> :多线程 </tag>
+            
+            <tag> :原子性 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>博客搭建中遇到的权限问题</title>
+      <link href="/2019/08/24/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/"/>
+      <url>/2019/08/24/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</url>
+      
+        <content type="html"><![CDATA[<p>本博客基于hexo框架搭建，以b站视频<a href="https://www.bilibili.com/video/av44544186?from=search&seid=11044546372699959844" target="_blank" rel="noopener">https://www.bilibili.com/video/av44544186?from=search&amp;seid=11044546372699959844</a>为教程搭建，记录了本人在搭建过程中出现的问题。</p><a id="more"></a><h2 id="权限问题"><a href="#权限问题" class="headerlink" title="权限问题"></a>权限问题</h2><p>利用hexo框架搭建博客需要root用户权限，macos系统有两种方式切换到root用户</p><p>1.sudo -i</p><img src="/2019/08/24/我的第一篇博客/Snip20190825_6.png"><p>2.sudo su</p><img src="/2019/08/24/我的第一篇博客/Snip20190825_5.png"><p>可以看出两者执行后工作目录不同，由于本人刚开始接触macos系统，根据教学视频，选择了第二种，第一种方式下的目录我在访达中没有找到，所以放弃。如果没有在获得root权限下执行init博客会报错，且之后的操作都是在root权限和该目录下进行的，可以说是我搭建过程中遇到的问题的最根本原因。</p><h2 id="新建博客的权限问题"><a href="#新建博客的权限问题" class="headerlink" title="新建博客的权限问题"></a>新建博客的权限问题</h2><p>使用 hexo new “blogtitle” 命令创建一篇新的博客时，由于在root用户权限下进行的，创建的文件权限如图</p><p>我之前创建的博客的权限如图</p><p>两者的区别在于用户，新创建的“blogtitle.md”博客的用户是root，之前创建的“我的第一篇博客.md”博客的用户被我改成了当前用户即“mac”，此时在终端使用vim编辑两者没有区别，但如果想使用其他软件编辑则会出现无编辑的权限，解决方法就是将用户改为当前用户“mac”，使用  </p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chown 用户名 文件名</span><br></pre></td></tr></table></figure><p>  来更改 ,如图</p><p>此时已经可以使用其他软件编辑了，我使用的是typora。</p>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> 踩坑记录 </tag>
+            
+            <tag> 博客搭建 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+  
+  
+</search>
